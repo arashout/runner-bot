@@ -30,13 +30,15 @@ def mentions_user_id(mentions: List[discord.member.Member], id: int) -> bool:
 def clean_discord_name(name: str) -> str:
     return name.split('[')[0]
 
+# TODO: Fix weather formatting
 def get_weather_message() -> str:
     observation = mgr.weather_at_place('Burnaby, BC, CA')
     w = observation.weather
     return f"**Weather**\t{w.detailed_status}\t{w.temperature('celsius')['temp']}°C\train?: {w.rain}"
 
-# TODO: Add code to handle time based requests... e.g. run at 4? 
+# TODO: Add code to handle time based requests... e.g. run at 4? Use dateparser library
 # TODO: Use emojis or symbols for weather
+# TODO: Send instructions only on DM
 @client.event
 async def on_message(message :discord.Message):
     if message.author == client.user:
