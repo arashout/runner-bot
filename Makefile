@@ -1,6 +1,6 @@
 sync:
 	echo "Move files"
-	scp -i ~/.ssh/fitpets.pem .envrc run.sh ${SERVER_ADDRESS}:/home/ubuntu/runner-bot
+	scp -i ~/.ssh/fitpets.pem .envrc ${SERVER_ADDRESS}:/home/ubuntu/runner-bot
 
 	echo "Stopping runner-bot"
 	ssh -i ~/.ssh/fitpets.pem ${SERVER_ADDRESS} 'sudo supervisorctl stop runner-bot'
