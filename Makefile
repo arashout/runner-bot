@@ -6,7 +6,10 @@ sync:
 	ssh -i ~/.ssh/fitpets.pem ${SERVER_ADDRESS} 'sudo supervisorctl stop runner-bot'
 
 	echo "Pulling any new changes"
-	git pull origin main
+	ssh -i ~/.ssh/fitpets.pem ${SERVER_ADDRESS} 'cd runner-bot && git pull origin main'
+
+	echo "Installing any new packages"
+	ssh -i ~/.ssh/fitpets.pem ${SERVER_ADDRESS} 'cd runner-bot && sudo pip3 install --target=/usr/local/lib/python3.8/dist-packages -r requirements.txt' 
 
 	echo "Starting runner-bot"
 	ssh -i ~/.ssh/fitpets.pem ${SERVER_ADDRESS} 'sudo supervisorctl start runner-bot'
