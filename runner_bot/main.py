@@ -67,6 +67,7 @@ def get_weather_forecast_message(time_string: str)-> str:
     # TODO: I don't know why but dateparser gives me 1 day ahead?
     dt: datetime = dateparser.parse(time_string)
     ask = dt - timedelta(days=1)
+    print("Trying to forecast for datetime: {}\t{}".format(dt, ask))
     w = mgr.forecast_at_place(burnaby_at, '3h').get_weather_at(ask)
     return format_weather_message(w, time_string)
 
@@ -95,16 +96,17 @@ async def on_message(message :discord.Message):
         msg = f"**{clean_discord_name(message.author.name)}** wants to **{activity}** at **{purposed_time}**. Who's in? @here"
         msg += f"\n{get_weather_forecast_message(purposed_time)}"
         await message.channel.send(msg)
-
+        return
+    
     groups = re_activity.findall(msg_body)
     if len(groups) > 0:
         msg = f"**{clean_discord_name(message.author.name)}** wants to **{groups[0]}**. Who's in? @here"
         msg += f"\n{get_weather_message()}"
         await message.channel.send(msg)
-
+        return
     elif "weather?" in msg_body:
         msg = get_weather_message()
         await message.channel.send(msg)
-
+        
 token = os.getenv('BOT_TOKEN')
 client.run(token)
