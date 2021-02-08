@@ -14,6 +14,7 @@ weather_icons = {
     "clear sky": "☀️",
     "few clouds": "🌤️",
     "scattered clouds": "☁️",
+    "broken clouds": "☁️",
     "shower rain": "🌧️",
     "rain": "🌧️",
     "thunderstorm": "⛈️",
@@ -27,6 +28,7 @@ re_activity = re.compile(r'^((?:run)|(?:walk))\?')
 re_activity_at = re.compile(r'((?:run)|(?:walk)) at (.*)\?')
 
 help_message = '''
+RunnerBot Verson: 0.2
 **Available Commands:**
 type **(run|walk)?** to @ everyone and get the current weather
     e.g. **walk?**
@@ -66,7 +68,7 @@ def format_weather_message(w, time_string = None) -> str:
 def get_weather_forecast_message(time_string: str)-> str:
     # TODO: Add more options like weahter for tomorrow?
     # TODO: I don't know why but dateparser gives me 1 day ahead?
-    dt: datetime = dateparser.parse(time_string)
+    dt: datetime = dateparser.parse(time_string, settings={'TIMEZONE': 'US/Pacific'})
     ask = dt - timedelta(days=1)
     diff = ask - datetime.now()
     hours = int(max([1, diff.total_seconds()//3600]))
@@ -102,19 +104,28 @@ async def on_message(message :discord.Message):
         activity = g[0]
         purposed_time = g[1]
         msg = f"**{clean_discord_name(message.author.name)}** wants to **{activity}** at **{purposed_time}**. Who's in? @here"
-        msg += f"\n{get_weather_forecast_message(purposed_time)}"
+        try:
+            msg += f"\n{get_weather_forecast_message(purposed_time)}"
+        except KeyError as ke:
+            print(ke)
         await message.channel.send(msg)
         return
     
     groups = re_activity.findall(msg_body)
     if len(groups) > 0:
         msg = f"**{clean_discord_name(message.author.name)}** wants to **{groups[0]}**. Who's in? @here"
-        msg += f"\n{get_weather_message()}"
+        try:
+            msg += f"\n{get_weather_message()}"
+        except KeyError as ke:
+            print(ke)
         await message.channel.send(msg)
         return
     elif "weather?" in msg_body:
-        msg = get_weather_message()
-        await message.channel.send(msg)
+        try:
+            msg = get_weather_message()
+            await message.channel.send(msg)
+        except KeyError as ke:
+            print(ke)
         
 token = os.getenv('BOT_TOKEN')
 client.run(token)
