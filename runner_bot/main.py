@@ -1,13 +1,14 @@
 import os
 from typing import List
 import re
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 import discord
 from pyowm import OWM
 
 import dateparser
 import pyowm
+import pytz
 
 # TODO: Add modifier for day/night
 weather_icons = {
@@ -70,7 +71,8 @@ def get_weather_forecast_message(time_string: str)-> str:
     # TODO: I don't know why but dateparser gives me 1 day ahead?
     dt: datetime = dateparser.parse(time_string, settings={'TIMEZONE': 'America/Los_Angeles'})
     ask = dt - timedelta(days=1)
-    diff = ask - datetime.now()
+
+    diff = ask - datetime.now(pytz.timezone('US/Pacific')).replace(tzinfo=None)
     hours = int(max([1, diff.total_seconds()//3600]))
     print("Trying to forecast for datetime: {}\t{}\thours ahead: {}".format(dt, ask, hours))
     try:
