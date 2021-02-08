@@ -68,7 +68,7 @@ def format_weather_message(w, time_string = None) -> str:
 def get_weather_forecast_message(time_string: str)-> str:
     # TODO: Add more options like weahter for tomorrow?
     # TODO: I don't know why but dateparser gives me 1 day ahead?
-    dt: datetime = dateparser.parse(time_string, settings={'TIMEZONE': 'US/Pacific'})
+    dt: datetime = dateparser.parse(time_string, settings={'TIMEZONE': 'America/Los_Angeles'})
     ask = dt - timedelta(days=1)
     diff = ask - datetime.now()
     hours = int(max([1, diff.total_seconds()//3600]))
