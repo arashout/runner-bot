@@ -7,6 +7,7 @@ import discord
 from pyowm import OWM
 
 import dateparser
+import pyowm
 
 # TODO: Add modifier for day/night
 weather_icons = {
@@ -20,7 +21,7 @@ weather_icons = {
     "mist": "🌫️",
 }
 
-burnaby_lat_long = (49.2488, 122.9805)
+burnaby_lat_long = (49.267132, -122.968941)
 burnaby_at = 'Burnaby, BC, CA'
 re_activity = re.compile(r'^((?:run)|(?:walk))\?')
 re_activity_at = re.compile(r'((?:run)|(?:walk)) at (.*)\?')
@@ -67,9 +68,16 @@ def get_weather_forecast_message(time_string: str)-> str:
     # TODO: I don't know why but dateparser gives me 1 day ahead?
     dt: datetime = dateparser.parse(time_string)
     ask = dt - timedelta(days=1)
-    print("Trying to forecast for datetime: {}\t{}".format(dt, ask))
-    w = mgr.forecast_at_place(burnaby_at, '3h').get_weather_at(ask)
-    return format_weather_message(w, time_string)
+    diff = ask - datetime.now()
+    hours = int(max([1, diff.total_seconds()//3600]))
+    print("Trying to forecast for datetime: {}\t{}\thours ahead: {}".format(dt, ask, hours))
+    try:
+        oc = mgr.one_call(burnaby_lat_long[0], burnaby_lat_long[1])
+        w = oc.forecast_hourly[hours]
+        return format_weather_message(w, time_string)
+    except pyowm.commons.exceptions.NotFoundError as e:
+        print(e)
+        return "Could not retrieve the **weather**"
 
 # TODO: Fix weather formatting
 def get_weather_message() -> str:
