@@ -29,7 +29,7 @@ re_activity = re.compile(r'^((?:run)|(?:walk))\?')
 re_activity_at = re.compile(r'((?:run)|(?:walk)) at (.*)\?')
 
 help_message = '''
-RunnerBot Verson: 0.2
+Verson: 0.2
 **Available Commands:**
 type **(run|walk)?** to @ everyone and get the current weather
     e.g. **walk?**
