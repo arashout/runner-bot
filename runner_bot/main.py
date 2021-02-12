@@ -16,6 +16,7 @@ weather_icons = {
     "few clouds": "🌤️",
     "scattered clouds": "☁️",
     "broken clouds": "☁️",
+    "overcast clouds":"☁️",
     "shower rain": "🌧️",
     "rain": "🌧️",
     "thunderstorm": "⛈️",
@@ -24,7 +25,7 @@ weather_icons = {
 }
 
 burnaby_lat_long = (49.267132, -122.968941)
-burnaby_at = 'Burnaby, BC, CA'
+burnaby_at = 'Burnaby, CA'
 re_activity = re.compile(r'^((?:run)|(?:walk))\?')
 re_activity_at = re.compile(r'((?:run)|(?:walk)) at (.*)\?')
 
@@ -58,7 +59,8 @@ def clean_discord_name(name: str) -> str:
 # TODO: Adjust precipation strings for forecast
 def format_weather_message(w, time_string = None) -> str:
     msg = f"**Weather** at **{time_string}**\t" if time_string is not None else "**Weather**\t"
-    msg += f"{weather_icons[w.detailed_status]}:{w.detailed_status}\t{w.temperature('celsius')['temp']}°C"
+    icon = weather_icons.get(w.detailed_status, '?')
+    msg += f"{icon}:{w.detailed_status}\t{w.temperature('celsius')['temp']}°C"
     if len(w.rain) > 0:
         msg += f"\t{w.rain['1h']}mm of rain in last hour"
     if len(w.snow) > 0:
@@ -112,11 +114,12 @@ async def on_message(message :discord.Message):
             print(ke)
         await message.channel.send(msg)
         return
-    
-    groups = re_activity.findall(msg_body)
-    if len(groups) > 0:
-        msg = f"**{clean_discord_name(message.author.name)}** wants to **{groups[0]}**. Who's in? @here"
+    elif "run?" in msg_body or "walk?" in msg_body:
+        activity = "run?" if "run?" in msg_body else "walk?"
+
+        msg = f"**{clean_discord_name(message.author.name)}** wants to **{activity}**. Who's in? @here"
         try:
+            print("Getting current weather")
             msg += f"\n{get_weather_message()}"
         except KeyError as ke:
             print(ke)
