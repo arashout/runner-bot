@@ -42,7 +42,7 @@ KEYWORD_RUN="run"
 KEYWORD_WALK="walk"
 KEYWORD_WEATHER="weather"
 
-owm_api_key = os.getenv('POETRY_OWM_KEY')
+owm_api_key = os.getenv('OWM_KEY')
 owm = OWM(owm_api_key)
 mgr = owm.weather_manager()
 
@@ -92,23 +92,17 @@ def get_weather_message() -> str:
     observation = mgr.weather_at_place(burnaby_at)
     return format_weather_message(observation.weather)
 
-def process(message: discord.Message, db: dict) -> Optional[str]:
+def process(message: discord.Message) -> Optional[str]:
     msg_body: str = message.content.lower()
 
     if COMMAND_CHARACTOR+KEYWORD_CALISTHENICS in msg_body:
-        group_members:list = db[KEYWORD_CALISTHENICS]
-        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
-        msg = f"**{clean_discord_name(message.author.name)}** wants to do **{KEYWORD_CALISTHENICS}**. Let them know you're in with a 👍\n{user_mentions}"
+        msg = f"**{clean_discord_name(message.author.name)}** wants to do **{KEYWORD_CALISTHENICS}**. Let them know you're in with a 👍 @ringers"
         return msg
     elif COMMAND_CHARACTOR+KEYWORD_RUN in msg_body:
-        group_members:list = db[KEYWORD_RUN]
-        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
-        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_RUN}**. Let them know you're in with a 👍\n{user_mentions}"
+        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_RUN}**. Let them know you're in with a 👍 @runners"
         return msg
     elif COMMAND_CHARACTOR+KEYWORD_WALK in msg_body:
-        group_members:list = db[KEYWORD_WALK]
-        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
-        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_WALK}**. Let them know you're in with a 👍\n{user_mentions}"
+        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_WALK}**. Let them know you're in with a 👍 @walkers"
         return msg
     elif COMMAND_CHARACTOR+KEYWORD_WEATHER in msg_body:
         pass
@@ -123,10 +117,7 @@ async def on_message(message :discord.Message):
         await message.channel.send(help_message)
         return
     
-    db = {}
-    with open('db.json', 'r') as f:
-        db = json.load(f)
-    response = process(message, db)
+    response = process(message)
     if response is None:
         return
     await message.channel.send(response)
