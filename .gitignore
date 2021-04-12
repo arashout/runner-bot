@@ -1,2 +1,4 @@
 .envrc
 log.txt
+db.json
+.vscode*

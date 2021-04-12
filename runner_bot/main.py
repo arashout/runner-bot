@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import os
-from typing import List
+from typing import List, Optional
 import re
 from datetime import timedelta, datetime, timezone
+import json
 
 import discord
 from pyowm import OWM
@@ -26,21 +29,20 @@ weather_icons = {
 
 burnaby_lat_long = (49.267132, -122.968941)
 burnaby_at = 'Burnaby, CA'
-re_activity = re.compile(r'^((?:run)|(?:walk))\?')
-re_activity_at = re.compile(r'((?:run)|(?:walk)) at (.*)\?')
 
 help_message = '''
 Verson: 0.2
 **Available Commands:**
-type **(run|walk)?** to @ everyone and get the current weather
-    e.g. **walk?**
-type **(run|walk) at <time>?** to @ everyone and get the weather forecast for today
-    e.g. **run at 10am?** OR **walk at 3pm?** 
-type **weather?** for the current weather
 **@RunnerBot** for help
 '''
 
-owm_api_key = os.getenv('OWM_KEY')
+COMMAND_CHARACTOR=";"
+KEYWORD_CALISTHENICS="ringz"
+KEYWORD_RUN="run"
+KEYWORD_WALK="walk"
+KEYWORD_WEATHER="weather"
+
+owm_api_key = os.getenv('POETRY_OWM_KEY')
 owm = OWM(owm_api_key)
 mgr = owm.weather_manager()
 
@@ -90,6 +92,27 @@ def get_weather_message() -> str:
     observation = mgr.weather_at_place(burnaby_at)
     return format_weather_message(observation.weather)
 
+def process(message: discord.Message, db: dict) -> Optional[str]:
+    msg_body: str = message.content.lower()
+
+    if COMMAND_CHARACTOR+KEYWORD_CALISTHENICS in msg_body:
+        group_members:list = db[KEYWORD_CALISTHENICS]
+        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
+        msg = f"**{clean_discord_name(message.author.name)}** wants to do **{KEYWORD_CALISTHENICS}**. Let them know you're in with a 👍\n{user_mentions}"
+        return msg
+    elif COMMAND_CHARACTOR+KEYWORD_RUN in msg_body:
+        group_members:list = db[KEYWORD_RUN]
+        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
+        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_RUN}**. Let them know you're in with a 👍\n{user_mentions}"
+        return msg
+    elif COMMAND_CHARACTOR+KEYWORD_WALK in msg_body:
+        group_members:list = db[KEYWORD_WALK]
+        user_mentions = ' '.join(['<@'+gm+'>' for gm in group_members])
+        msg = f"**{clean_discord_name(message.author.name)}** wants to go for a **{KEYWORD_WALK}**. Let them know you're in with a 👍\n{user_mentions}"
+        return msg
+    elif COMMAND_CHARACTOR+KEYWORD_WEATHER in msg_body:
+        pass
+
 # TODO: Send instructions only on DM
 @client.event
 async def on_message(message :discord.Message):
@@ -99,38 +122,15 @@ async def on_message(message :discord.Message):
     if mentions_user_id(message.mentions, client.user.id):
         await message.channel.send(help_message)
         return
-
-    msg_body: str = message.content.lower()
-    # TODO: Combine regex?
-    groups = re_activity_at.findall(msg_body)
-    if len(groups) > 0:
-        g = groups[0]
-        activity = g[0]
-        purposed_time = g[1]
-        msg = f"**{clean_discord_name(message.author.name)}** wants to **{activity}** at **{purposed_time}**. Who's in? @here"
-        try:
-            msg += f"\n{get_weather_forecast_message(purposed_time)}"
-        except KeyError as ke:
-            print(ke)
-        await message.channel.send(msg)
+    
+    db = {}
+    with open('db.json', 'r') as f:
+        db = json.load(f)
+    response = process(message, db)
+    if response is None:
         return
-    elif "run?" in msg_body or "walk?" in msg_body:
-        activity = "run?" if "run?" in msg_body else "walk?"
-
-        msg = f"**{clean_discord_name(message.author.name)}** wants to **{activity}**. Who's in? @here"
-        try:
-            print("Getting current weather")
-            msg += f"\n{get_weather_message()}"
-        except KeyError as ke:
-            print(ke)
-        await message.channel.send(msg)
-        return
-    elif "weather?" in msg_body:
-        try:
-            msg = get_weather_message()
-            await message.channel.send(msg)
-        except KeyError as ke:
-            print(ke)
+    await message.channel.send(response)
+ 
         
 token = os.getenv('BOT_TOKEN')
 client.run(token)
